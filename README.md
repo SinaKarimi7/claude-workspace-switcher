@@ -1,5 +1,7 @@
 # Claude Workspace Switcher
 
+![Two overlapping workspace windows with the Claude starburst](assets/workspaces.webp)
+
 A small Windows launcher for two Claude Desktop profiles. Work opens the default profile. Original launches Claude with a separate user-data folder under LocalAppData named Claude-Work. Each button starts the installed Claude Desktop executable. Browser sign-in callbacks follow Windows app registration.
 
 ## Build and run
