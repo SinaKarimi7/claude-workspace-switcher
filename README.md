@@ -1,5 +1,7 @@
 # Claude Workspace Switcher
 
+**Archived.** For multiple Claude Desktop accounts on Windows, we recommend [Piwqust’s Claude Profile Switcher](https://github.com/Piwqust/claude-switcher). The documentation below describes the archived launcher.
+
 ![Two overlapping workspace windows with the Claude starburst](assets/workspaces.webp)
 
 A small Windows launcher for two Claude Desktop profiles. Work opens the default profile. Original launches Claude with a separate user-data folder under LocalAppData named Claude-Work. Each button starts the installed Claude Desktop executable. Browser sign-in callbacks follow Windows app registration.
