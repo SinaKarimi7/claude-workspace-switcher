@@ -51,13 +51,18 @@ class Switcher : Form {
         Controls.Add(add);
         Render();
     }
-    void Save(XElement next) {
+    bool Save(XElement next) {
         try {
             using (RegistryKey key = Registry.CurrentUser.CreateSubKey(Key))
                 key.SetValue("Profiles", next.ToString(SaveOptions.DisableFormatting));
             profiles = next;
             Render();
-        } catch (Exception ex) { MessageBox.Show(this, ex.Message, Text); }
+            return true;
+        } catch (Exception ex) { MessageBox.Show(this, ex.Message, Text); return false; }
+    }
+    void OpenProfile(string id) {
+        try { Process.Start(Workspace(id)); }
+        catch (Exception ex) { MessageBox.Show(this, ex.Message, Text); }
     }
     void Render() {
         while(list.Controls.Count > 0) list.Controls[0].Dispose();
@@ -67,7 +72,7 @@ class Switcher : Form {
             var row = new FlowLayoutPanel { AutoSize = true, WrapContents = false };
             var open = new Button { Width = 245, Height = 38, AutoEllipsis = true, Text = (string)entry.Attribute("name") + (main ? "  (main)" : "") };
             if (main) AcceptButton = open;
-            open.Click += delegate { try { Process.Start(Workspace(id)); } catch(Exception ex) { MessageBox.Show(this, ex.Message, Text); } };
+            open.Click += delegate { OpenProfile(id); };
             var edit = new Button { Text = "Edit", Height = 38, Width = 58 };
             edit.Click += delegate { Edit(id); };
             row.Controls.Add(open);
@@ -78,13 +83,26 @@ class Switcher : Form {
     void Edit(string id) {
         var next = new XElement(profiles);
         var entry = next.Elements().FirstOrDefault(e => (string)e.Attribute("id") == id);
-        using (var dialog = new Form { Text = entry == null ? "Add profile" : "Edit profile", Font = Font, ClientSize = new Size(320,150), FormBorderStyle = FormBorderStyle.FixedDialog, MinimizeBox = false, MaximizeBox = false, StartPosition = FormStartPosition.CenterParent }) {
-            var label = new Label { Text = "Profile name", Left = 12, Top = 8, AutoSize = true };
-            var name = new TextBox { Left = 12, Top = 32, Width = 294, MaxLength = 80, Text = entry == null ? "" : (string)entry.Attribute("name") };
+        using (var dialog = new Form { Text = entry == null ? "Add profile" : "Edit profile", Font = Font, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink, FormBorderStyle = FormBorderStyle.FixedDialog, MinimizeBox = false, MaximizeBox = false, StartPosition = FormStartPosition.CenterParent }) {
+            var layout = new TableLayoutPanel { AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink, Dock = DockStyle.Fill, Padding = new Padding(12), ColumnCount = 2 };
+            var label = new Label { Text = "Profile name", AutoSize = true };
+            var name = new TextBox { Width = 310, Dock = DockStyle.Fill, MaxLength = 80, Text = entry == null ? "" : (string)entry.Attribute("name") };
             bool isMain = id == (string)next.Attribute("main");
-            var main = new CheckBox { Text = "Main profile", Left = 12, Top = 65, Checked = isMain, Enabled = !isMain, AutoSize = true };
-            var save = new Button { Text = "Save", Left = 228, Top = 105 };
-            var remove = new Button { Text = "Remove", Left = 12, Top = 105, Visible = entry != null, Enabled = next.Elements().Count() > 1 };
+            var main = new CheckBox { Text = "Main profile", Checked = isMain, Enabled = !isMain, AutoSize = true };
+            var save = new Button { Text = entry == null ? "Create and open" : "Save", AutoSize = true, Anchor = AnchorStyles.Right };
+            var remove = new Button { Text = "Remove", AutoSize = true, Visible = entry != null, Enabled = next.Elements().Count() > 1 };
+            layout.Controls.Add(label, 0, 0);
+            layout.Controls.Add(name, 0, 1);
+            layout.SetColumnSpan(name, 2);
+            layout.Controls.Add(main, 0, 2);
+            layout.SetColumnSpan(main, 2);
+            if (entry == null) {
+                var hint = new Label { Text = "This opens Claude for the new profile. Choose Continue with email and enter the second account's address. To use a code, open the emailed link on another device and enter the code where you started sign-in, if prompted.", AutoSize = true, MaximumSize = new Size(310, 0) };
+                layout.Controls.Add(hint, 0, 3);
+                layout.SetColumnSpan(hint, 2);
+            }
+            layout.Controls.Add(remove, 0, 4);
+            layout.Controls.Add(save, 1, 4);
             save.Click += delegate {
                 string value = name.Text.Trim();
                 if (value.Length == 0 || next.Elements().Any(e => e != entry && String.Equals((string)e.Attribute("name"),value,StringComparison.OrdinalIgnoreCase))) {
@@ -101,10 +119,11 @@ class Switcher : Form {
                 if (isMain) next.SetAttributeValue("main",(string)next.Elements().First().Attribute("id"));
                 dialog.DialogResult = DialogResult.OK;
             };
-            dialog.Controls.AddRange(new Control[]{label,name,main,save,remove});
+            dialog.Controls.Add(layout);
             dialog.AcceptButton = save;
             dialog.ActiveControl = name;
-            if (dialog.ShowDialog(this) == DialogResult.OK) Save(next);
+            if (dialog.ShowDialog(this) == DialogResult.OK && Save(next) && entry == null)
+                OpenProfile(id);
         }
     }
     [STAThread] static int Main(string[] args) {
