@@ -10,6 +10,13 @@ Download `Claude Workspace Switcher.exe` from the [latest GitHub release](https:
 
 On 64-bit Windows with .NET Framework 4.x and the Claude Desktop MSIX package installed, run ` .\build.ps1 ` in PowerShell. Open `bin\Claude Workspace Switcher.exe` and pin it to the taskbar if desired.
 
+## Signing releases
+
+1. In Azure Artifact Signing, complete identity validation and create a **Public Trust** certificate profile. Grant the workflow's Azure application the **Artifact Signing Certificate Profile Signer** role on that profile.
+2. Add a federated credential to the Azure application for GitHub Actions. Use issuer `https://token.actions.githubusercontent.com`, audience `api://AzureADTokenExchange`, and subject `repo:SinaKarimi7/claude-workspace-switcher:environment:release`.
+3. In the GitHub repository's `release` environment, restrict deployments to `v*` tags and set the variables `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID`, `SIGNING_ENDPOINT` (the regional endpoint URL), `SIGNING_ACCOUNT`, and `SIGNING_PROFILE`.
+4. Push a new version tag. The release job signs the executable, verifies its signature and timestamp, then uploads it to GitHub Releases.
+
 ## Manage profiles
 
 Choose **Add profile** to create a named launcher with a separate local Claude data folder. Choose **Edit** to rename a profile, designate it as main, or remove its launcher entry. The main profile appears first and is the default button when the window opens. Removing the main profile promotes the first remaining entry. The last profile cannot be removed. Removing a launcher entry keeps the local Claude files. Profile settings are saved for the current Windows user.
