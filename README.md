@@ -6,6 +6,8 @@ A small Windows launcher for two Claude Desktop profiles. Work opens the default
 
 ## Build and run
 
+Download `Claude Workspace Switcher.exe` from the [latest GitHub release](https://github.com/SinaKarimi7/claude-workspace-switcher/releases/latest) and open it on Windows with Claude Desktop installed.
+
 On 64-bit Windows with .NET Framework 4.x and the Claude Desktop MSIX package installed, run ` .\build.ps1 ` in PowerShell. Open `bin\Claude Workspace Switcher.exe` and pin it to the taskbar if desired.
 
 ## Manage profiles

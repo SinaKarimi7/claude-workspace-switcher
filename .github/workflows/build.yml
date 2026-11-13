@@ -1,0 +1,44 @@
+name: Windows build
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - run: .\build.ps1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-executable
+          path: bin/Claude Workspace Switcher.exe
+          if-no-files-found: error
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: windows-2022
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: windows-executable
+      - name: Publish Windows executable
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          gh release view "$env:TAG" --repo "$env:GITHUB_REPOSITORY" *> $null
+          if ($LASTEXITCODE -eq 0) {
+            gh release upload "$env:TAG" "Claude Workspace Switcher.exe" --repo "$env:GITHUB_REPOSITORY" --clobber
+          } else {
+            gh release create "$env:TAG" "Claude Workspace Switcher.exe" --repo "$env:GITHUB_REPOSITORY" --verify-tag --generate-notes
+          }
