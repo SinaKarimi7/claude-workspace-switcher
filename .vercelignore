@@ -1,4 +1,8 @@
-*
-!public/
-!public/**
-!vercel.json
+.git
+.github
+bin
+assets
+*.cs
+*.ps1
+*.manifest
+*.ico
